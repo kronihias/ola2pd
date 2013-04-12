@@ -82,6 +82,7 @@ public:
 		// --- define inlets and outlets ---
 		AddInAnything(); // default inlet
     AddOutList();	// outlet for DMX list
+    AddOutList();	// outlet for individual DMX channels
     post("ola2pd v0.02 - an interface to Open Lighting Arquitecture");
     post("(C) 2012-2013 Santi Noreña libremediaserver@gmail.com");
     
@@ -144,41 +145,76 @@ void m_send(int address, int value) {
       value = (int)std::max(value, 0);
       value = (int)std::min(value, 255);
       
-      m_buffer.SetChannel(address-1, value);
-      m_clientpointer->SendDmx(m_universe, m_buffer);
+      m_out_buffer.SetChannel(address-1, value);
+      m_clientpointer->SendDmx(m_universe, m_out_buffer);
     }
 	}
   
 void m_blackout(int value) {
     if (m_clientpointer != NULL)
     {
-      unsigned int size = m_buffer.Size();
+      unsigned int size = m_out_buffer.Size();
       
       if (value && !m_blackout_status)
       {
-        m_blackout_buffer.Set(m_buffer.GetRaw(), size);
+        // copy buffer to blackout buffer
+        m_blackout_buffer.Set(m_out_buffer.GetRaw(), size);
         
-        m_buffer.Blackout();
-        m_clientpointer->SendDmx(m_universe, m_buffer);
+        // set all channels zero
+        m_out_buffer.Blackout();
+        m_clientpointer->SendDmx(m_universe, m_out_buffer);
         m_blackout_status = 1;
       }
       
       if (!value && m_blackout_status)
       {
-        m_buffer.Set(m_blackout_buffer.GetRaw(), size);
+        // copy buffer before blackout back
+        m_out_buffer.Set(m_blackout_buffer.GetRaw(), size);
         
-        m_clientpointer->SendDmx(m_universe, m_buffer);
+        m_clientpointer->SendDmx(m_universe, m_out_buffer);
         m_blackout_status = 0;
       }
     }
 	}
+  
+
+// output all values from current input buffer -> eg. for storage
+void m_dump() {
+    
+    unsigned int size = m_in_buffer.Size();
+  
+  post("dumping %i channels", size);
+    AtomList dmxchannel;
+    dmxchannel(2);
+    
+    // output each channel as list <channel nr> <value> instead of one big list -> by Matthias Kronlachner
+    for(int z=0; z < size; z++)
+    {
+      SetFloat(dmxchannel[0], z+1);
+      SetFloat(dmxchannel[1], m_in_buffer.Get(z));
+      ToOutList(2, dmxchannel); // output each channel individually
+    }
+    
+  }
+ 
+  // output all values from current input buffer -> eg. for storage
+  void m_get() {
+    
+    unsigned int size = m_out_buffer.Size();
+    
+    post("setting ola output buffer to pd output buffer", size);
+    
+    m_out_buffer.Set(m_in_buffer.GetRaw(), size);
+    
+  }
   
 private:
     unsigned int m_universe;
     unsigned int m_counter;
     unsigned int m_blackout_status;
   
-    DmxBuffer m_buffer;
+    DmxBuffer m_in_buffer;
+    DmxBuffer m_out_buffer;
     DmxBuffer m_blackout_buffer;
   
 //    ola::io::UnmanagedFileDescriptor m_stdin_descriptor;
@@ -201,12 +237,18 @@ private:
   FLEXT_CADDMETHOD_II(c,0,"send",m_send);
   // -- send DMX data! ----
   FLEXT_CADDMETHOD_I(c,0,"blackout",m_blackout);
+  FLEXT_CADDMETHOD_(c,0,"dump",m_dump); // output in_buffer to right outlet
+  FLEXT_CADDMETHOD_(c,0,"get",m_get); // set out_buffer to in_buffer -> take status from ola!
 	}
+  
 	FLEXT_CALLBACK(m_bang)
 	FLEXT_THREAD(m_open)
   FLEXT_CALLBACK_II(m_send)
   FLEXT_CALLBACK_I(m_blackout)
-	FLEXT_CALLBACK(m_close) 
+	FLEXT_CALLBACK(m_close)
+  FLEXT_CALLBACK(m_dump)
+  FLEXT_CALLBACK(m_get)
+  
 	FLEXT_ATTRVAR_I(m_universe) // wrapper functions (get and set) for integer variable universe
 };
 // instantiate the class (constructor takes no arguments)
@@ -222,21 +264,29 @@ void ola2pd::NewDmx(unsigned int universe,
   m_counter++;
   gettimeofday(&m_last_data, NULL);   
   int z;
+  
   AtomList dmxlist;
   dmxlist(512);
   
   AtomList dmxchannel;
   dmxchannel(2);
   
-  // output each channel as list <channel nr> <value> instead of one big list -> by Matthias Kronlachner
+  // output each channel as list <channel nr> <value> as well -> by Matthias Kronlachner
+  
   for(z=0; z < 512; z++)
   {
-    //SetFloat(dmxlist[z],(buffer.Get(z)));
+    SetFloat(dmxlist[z],(buffer.Get(z)));
     SetFloat(dmxchannel[0], z+1);
     SetFloat(dmxchannel[1], buffer.Get(z));
-    ToOutList(0, dmxchannel);
+    ToOutList(1, dmxchannel); // output each channel individually
   }
-  //ToOutList(0, dmxlist);
+  
+  ToOutList(0, dmxlist); // output one list with values
+  
+  // copy to in_buffer
+  unsigned int size = buffer.Size();
+  m_in_buffer.Set(buffer.GetRaw(), size);
+  
 }
 
 /*
@@ -250,7 +300,7 @@ bool ola2pd::CheckDataLoss() {
     timersub(&now, &m_last_data, &diff);
     if (diff.tv_sec > 4 || (diff.tv_sec == 4 && diff.tv_usec > 4000000)) {
       // loss of data
-      post("ola2pd: Can not read DMX!");
+      post("ola2pd: Timeout since last DMX input from OLA!");
     }
   }
   return true;
