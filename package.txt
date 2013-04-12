@@ -1,0 +1,19 @@
+NAME=ola2pd
+SRCS=main.cpp
+
+# user defined compiler flags
+UFLAGS += -v -I/opt/local/include
+
+# user defined linker flags
+LDFLAGS += -L/opt/local/lib -lola 
+
+# FLEXT HEADERS
+
+# multithreading
+
+BUILDTYPE=multi
+
+# Type mode of the release
+
+BUILDMODE=release
+

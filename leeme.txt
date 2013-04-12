@@ -1,0 +1,68 @@
+*******************************************************************************
+ola2pd 0.02 6/01/2013
+
+(C) 2012-2013 Santi Noreña belfegor<AT>gmail.com
+
+Based on dmxmonitor by Dirk Jagdmann doj<AT>cubic.org
+and dmxmonitor_ola by Simon Newton nomis52<AT>gmail.com
+ 
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*******************************************************************************
+
+ola2pd es un objeto de Pure Data que permite leer un universo DMX512 del demonio de Open Lighting Arquitecture. Este proporciona soporte para muchos protocoles de iluminación basados en red (Pathport, ArtNet, ACN, ShowNet, SandNet) y dispositivos USB-DMX (Enttec Open DMX Pro, Velleman, Robe,...). 
+
+El objeto está desarrollado con las cabeceras Flext de Thomas Grill. Se incluye el binario para GNU/Linux, testeado en Debian Wheezy y Ubuntu Precise 12.04.
+
+*******************************************************************************
+
+Instalación:
+
+- Instala y configura OLA siguiendo las instrucciones de http://code.google.com/p/linux-lighting
+
+- Copia el archivo ola2pd.pd_linux en una carpeta que esté dentro de las rutas de Pure Data (la carpeta pd-externals en la carpeta de usuario es el sitio indicado) o en la carpeta del patch que uses.
+
+- Si el binario no funciona en tu distribución puedes probar a compilarlo tú mismo. Necesitas tener instalado y compilado flext, y las fuentes de Pure Data/Max. Después se puede compilar con el build.sh de flext bash /home/user/flext/build.sh <system> <compiler>.
+
+- En Ubuntu hay que hacer un paso más. El gcc de Ubuntu tiene una opción habilitada que hace que build.sh no linke bien la biblioteca ola. Como workaround copia la salida de la terminal entre el último g+++ y -lflext-pd_t en un archivo de texto y mueve -lola al final de la línea. Copia todo de nuevo y pégalo en terminal.  
+
+En mi caso copio
+
+g++ -L/usr/include/ola -lola  -pthread -shared  -Wl,-S -L/home/santi/PMS/pd-0.43-2/bin -L/usr/lib -o pd-linux/release-multi/ola2pd.pd_linux   pd-linux/release-multi/main.opp  -lflext-pd_t
+
+y lo cambio a
+
+g++ -L/usr/include/ola -pthread -shared  -Wl,-S -L/home/santi/PMS/pd-0.43-2/bin -L/usr/lib -o pd-linux/release-multi/ola2pd.pd_linux   pd-linux/release-multi/main.opp  -lflext-pd_t -lola
+
+Después ya se tiene el binario listo para usar.
+
+*******************************************************************************
+
+Uso:
+
+- El demonio olad debe de estar corriendo en el sistema y con un universo al menos configurado como input para que podamos tomar datos de él.
+- El demonio olad escucha en el interface activo con la IP más baja, típicamente 2.x.x.x. Podemos ver si están llegando datos ‌dirigiendo un navegador web a localhost:9090. Después pinchando en el universo que queramos monitorizar y luego pinchando en la pestaña "DMX MMonitor".
+- Están disponibles los 512 canales; El objeto saca una lista de 512 enteros.
+- Antes de que el objeto empiece a sacar valores hay que crear el nodo. Para ello hay que mandar un mensaje [open]. Antes de ello podemos configurar el universo de OLA al que queremos que escuche con el mensaje <universe x>. donde x es el número de universo OLA. Por defecto escucha en el universo 0. Si queremos cambiar el universo de escucha hay que cerrar el nodo mandando un mensaje [close], mandar el mensaje <universe x>, y volver a mandar [open] 
+
+*******************************************************************************
+
+Créditos:
+
+- Simon Newton por OLA y ola_dmxmonitor. Esto es una modificación de ese código.
+
+*******************************************************************************
+
+Repositorio SVN:
+
+http://code.google.com/p/libremediaserver/externals/ola2pd
+
+Contacto:
+
+belfegor@gmail.com
+
+*******************************************************************************
