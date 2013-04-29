@@ -149,6 +149,19 @@ void m_send(int address, int value) {
       m_clientpointer->SendDmx(m_universe, m_out_buffer);
     }
 	}
+
+void m_set(int address, int value) {
+        if (m_clientpointer != NULL)
+        {
+            address = (int)std::max(address, 1);
+            address = (int)std::min(address, 512);
+            value = (int)std::max(value, 0);
+            value = (int)std::min(value, 255);
+            
+            m_out_buffer.SetChannel(address-1, value);
+            //m_clientpointer->SendDmx(m_universe, m_out_buffer);
+        }
+	}
   
 void m_blackout(int value) {
     if (m_clientpointer != NULL)
@@ -236,6 +249,9 @@ private:
   // -- send DMX data! ----
   FLEXT_CADDMETHOD_II(c,0,"send",m_send);
   // -- send DMX data! ----
+  // -- set DMX data without sending ----
+  FLEXT_CADDMETHOD_II(c,0,"set",m_set);
+  // -- set DMX data! ----
   FLEXT_CADDMETHOD_I(c,0,"blackout",m_blackout);
   FLEXT_CADDMETHOD_(c,0,"dump",m_dump); // output in_buffer to right outlet
   FLEXT_CADDMETHOD_(c,0,"get",m_get); // set out_buffer to in_buffer -> take status from ola!
@@ -244,6 +260,7 @@ private:
 	FLEXT_CALLBACK(m_bang)
 	FLEXT_THREAD(m_open)
   FLEXT_CALLBACK_II(m_send)
+    FLEXT_CALLBACK_II(m_set)
   FLEXT_CALLBACK_I(m_blackout)
 	FLEXT_CALLBACK(m_close)
   FLEXT_CALLBACK(m_dump)
