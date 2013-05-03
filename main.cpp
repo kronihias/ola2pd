@@ -137,6 +137,13 @@ void m_bang() {
 		else {post("%s configured on universe %d. Send open to start listening",thisName(),m_universe);}
 	}
 
+void m_send_no_set() {
+    if (m_clientpointer != NULL)
+    {
+        m_clientpointer->SendDmx(m_universe, m_out_buffer);
+    }
+}
+    
 void m_send(int address, int value) {
     if (m_clientpointer != NULL)
     {
@@ -159,7 +166,7 @@ void m_set(int address, int value) {
             value = (int)std::min(value, 255);
             
             m_out_buffer.SetChannel(address-1, value);
-            //m_clientpointer->SendDmx(m_universe, m_out_buffer);
+            //m_clientpointer->SendDmx(m_universe, m_out_buffer); // dont send to ola with set message
         }
 	}
   
@@ -246,7 +253,9 @@ private:
 	// --- set up attributes (class scope) ---
 	FLEXT_CADDATTR_VAR1(c,"universe",m_universe);
   
-  // -- send DMX data! ----
+  // -- send DMX data without setting anything ----
+  FLEXT_CADDMETHOD_(c,0,"send",m_send_no_set);
+  // -- send DMX data with setting one channel! ----
   FLEXT_CADDMETHOD_II(c,0,"send",m_send);
   // -- send DMX data! ----
   // -- set DMX data without sending ----
@@ -259,6 +268,7 @@ private:
   
 	FLEXT_CALLBACK(m_bang)
 	FLEXT_THREAD(m_open)
+	FLEXT_CALLBACK(m_send_no_set)
   FLEXT_CALLBACK_II(m_send)
     FLEXT_CALLBACK_II(m_set)
   FLEXT_CALLBACK_I(m_blackout)
