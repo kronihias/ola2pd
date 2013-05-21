@@ -169,7 +169,19 @@ void m_set(int address, int value) {
             //m_clientpointer->SendDmx(m_universe, m_out_buffer); // dont send to ola with set message
         }
 	}
-  
+
+void m_list(int argc,t_atom *argv) {
+    if (m_clientpointer != NULL)
+    {
+        for (int i=0; i < std::min(argc,512); i++)
+        {
+            m_out_buffer.SetChannel(i, GetAInt(argv[i]));
+        }
+        
+        //m_clientpointer->SendDmx(m_universe, m_out_buffer); // dont send to ola with set message
+    }
+}
+
 void m_blackout(int value) {
     if (m_clientpointer != NULL)
     {
@@ -195,7 +207,7 @@ void m_blackout(int value) {
         m_blackout_status = 0;
       }
     }
-	}
+}
   
 
 // output all values from current input buffer -> eg. for storage
@@ -261,6 +273,9 @@ private:
   // -- set DMX data without sending ----
   FLEXT_CADDMETHOD_II(c,0,"set",m_set);
   // -- set DMX data! ----
+  // -- set DMX data with list
+  FLEXT_CADDMETHOD_(c,0,"list",m_list); // send list to set up to 512 dmx channels at once
+  
   FLEXT_CADDMETHOD_I(c,0,"blackout",m_blackout);
   FLEXT_CADDMETHOD_(c,0,"dump",m_dump); // output in_buffer to right outlet
   FLEXT_CADDMETHOD_(c,0,"get",m_get); // set out_buffer to in_buffer -> take status from ola!
@@ -269,12 +284,13 @@ private:
 	FLEXT_CALLBACK(m_bang)
 	FLEXT_THREAD(m_open)
 	FLEXT_CALLBACK(m_send_no_set)
-  FLEXT_CALLBACK_II(m_send)
+    FLEXT_CALLBACK_II(m_send)
     FLEXT_CALLBACK_II(m_set)
-  FLEXT_CALLBACK_I(m_blackout)
+    FLEXT_CALLBACK_V(m_list)
+    FLEXT_CALLBACK_I(m_blackout)
 	FLEXT_CALLBACK(m_close)
-  FLEXT_CALLBACK(m_dump)
-  FLEXT_CALLBACK(m_get)
+    FLEXT_CALLBACK(m_dump)
+    FLEXT_CALLBACK(m_get)
   
 	FLEXT_ATTRVAR_I(m_universe) // wrapper functions (get and set) for integer variable universe
 };

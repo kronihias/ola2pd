@@ -1,4 +1,4 @@
-#N canvas 1607 173 888 480 10;
+#N canvas 370 58 910 478 10;
 #X obj 269 132 bng 15 250 50 0 empty empty status 17 7 0 10 -262144
 -1 -1;
 #X msg 181 122 open;
@@ -29,7 +29,7 @@
 #X text 744 447 (olad);
 #X text 6 7 ola2pd - Interface for reading dmx data from Open Lighting
 Arquitecture. (c) 2012-2013 Santi Noreña - GPL License;
-#X text 361 98 send <dmx address> <value>;
+#X text 361 78 send <dmx address> <value>;
 #X text 11 40 extended for sending dmx data 04/2013 by Matthias Kronlachner
 ;
 #X msg 47 221 get;
@@ -59,7 +59,7 @@ Arquitecture. (c) 2012-2013 Santi Noreña - GPL License;
 #X connect 10 2 4 0;
 #X connect 11 0 5 0;
 #X restore 237 262 pd save-it;
-#X msg 364 119 send 1 111;
+#X msg 364 99 send 1 111;
 #X obj 205 179 r \$0-ola;
 #X msg 47 194 dump;
 #X obj 626 92 s \$0-ola;
@@ -105,7 +105,7 @@ Arquitecture. (c) 2012-2013 Santi Noreña - GPL License;
 #X connect 4 0 3 1;
 #X connect 5 0 6 0;
 #X connect 6 0 1 0;
-#X restore 364 72 pd send-random-values;
+#X restore 364 52 pd send-random-values;
 #N canvas 0 22 587 237 list-output 0;
 #X obj 95 41 inlet;
 #X obj 95 81 list split 4;
@@ -131,11 +131,11 @@ Arquitecture. (c) 2012-2013 Santi Noreña - GPL License;
 #X text 243 245 dump outlet for saving status;
 #X text 257 203 creation argument -> universe to bind -> you still
 have to open;
-#X text 450 170 sets a dmx channel in the buffer without sending it!
+#X text 450 150 sets a dmx channel in the buffer without sending it!
 ;
-#X msg 365 144 send;
-#X msg 386 169 set 7 111;
-#X text 401 144 send buffer to ola without setting a channel;
+#X msg 365 124 send;
+#X msg 386 149 set 7 111;
+#X text 401 124 send buffer to ola without setting a channel;
 #X text 531 287 if you have to change a lot of channels its better
 to;
 #X text 529 304 use the |set x y ( method and afterwards send the changes
@@ -173,6 +173,8 @@ every eg. 30 ms with send;
 #X connect 14 0 6 0;
 #X restore 531 264 pd how-to-deal-with-many-changes;
 #X text 733 265 !!!!!!;
+#X msg 384 177 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15;
+#X text 609 178 set multiple channels with a list (not sending!);
 #X connect 0 0 12 0;
 #X connect 1 0 12 0;
 #X connect 2 0 12 0;
@@ -194,3 +196,4 @@ every eg. 30 ms with send;
 #X connect 32 0 12 0;
 #X connect 42 0 12 0;
 #X connect 43 0 12 0;
+#X connect 49 0 12 0;
